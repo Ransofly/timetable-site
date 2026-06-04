@@ -2,48 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>My Timetable</title>
+<title>Timetable</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root {
+    --bg: #0b1220;
+    --card: #111a2e;
+    --text: #ffffff;
+    --accent: #38bdf8;
+}
+
+.light {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --text: #111827;
+    --accent: #2563eb;
+}
+
 body {
-    font-family: Arial, sans-serif;
     margin: 0;
-    background: #0f172a;
-    color: white;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: 0.3s ease;
 }
 
 header {
-    text-align: center;
     padding: 20px;
-    background: #1e293b;
+    text-align: center;
+    background: var(--card);
+    position: sticky;
+    top: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.buttons {
+    margin-top: 10px;
 }
 
 button {
-    padding: 10px 20px;
-    margin: 10px;
     border: none;
+    padding: 10px 16px;
+    margin: 5px;
+    border-radius: 10px;
     cursor: pointer;
-    border-radius: 8px;
     font-weight: bold;
+    transition: 0.2s;
 }
 
 .btn {
-    background: #38bdf8;
-    color: black;
+    background: var(--accent);
+    color: white;
+}
+
+.btn:hover {
+    transform: scale(1.05);
 }
 
 .container {
     max-width: 600px;
     margin: auto;
-    padding: 20px;
+    padding: 15px;
 }
 
 .card {
-    background: #1e293b;
+    background: var(--card);
     padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
+    margin: 12px 0;
+    border-radius: 14px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    transform: translateY(10px);
+    opacity: 0;
+    animation: pop 0.3s forwards;
+}
+
+@keyframes pop {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toggle {
+    background: #22c55e;
+    color: white;
 }
 </style>
 </head>
@@ -51,9 +99,13 @@ button {
 <body>
 
 <header>
-<h1>My School Timetable</h1>
+<h1>📚 My Timetable</h1>
+
+<div class="buttons">
 <button class="btn" onclick="showWeek('A')">Week A</button>
 <button class="btn" onclick="showWeek('B')">Week B</button>
+<button class="toggle" onclick="toggleTheme()">Light/Dark</button>
+</div>
 </header>
 
 <div class="container" id="timetable"></div>
@@ -81,15 +133,20 @@ function showWeek(week) {
 
     let data = week === "A" ? weekA : weekB;
 
-    data.forEach(item => {
+    data.forEach((item, i) => {
         let div = document.createElement("div");
         div.className = "card";
+        div.style.animationDelay = (i * 0.05) + "s";
         div.innerText = item;
         container.appendChild(div);
     });
 }
 
-// default load
+function toggleTheme() {
+    document.body.classList.toggle("light");
+}
+
+// default
 showWeek("A");
 </script>
 
