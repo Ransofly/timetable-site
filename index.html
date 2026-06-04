@@ -2,152 +2,224 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Timetable</title>
+<title>School Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root {
-    --bg: #0b1220;
-    --card: #111a2e;
-    --text: #ffffff;
-    --accent: #38bdf8;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root{
+  --bg:#0b1220;
+  --panel:#0f1a2f;
+  --card:#16233f;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --accent:#7c3aed;
+  --accent2:#06b6d4;
 }
 
-.light {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --text: #111827;
-    --accent: #2563eb;
+.light{
+  --bg:#f5f7ff;
+  --panel:#ffffff;
+  --card:#eef2ff;
+  --text:#0f172a;
+  --muted:#475569;
+  --accent:#4f46e5;
+  --accent2:#06b6d4;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    transition: 0.3s ease;
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
 }
 
-header {
-    padding: 20px;
-    text-align: center;
-    background: var(--card);
-    position: sticky;
-    top: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:var(--panel);
+  height:100vh;
+  padding:20px;
+  box-sizing:border-box;
+  position:fixed;
 }
 
-h1 {
-    margin: 0;
-    font-size: 22px;
+.logo{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:20px;
 }
 
-.buttons {
-    margin-top: 10px;
+.tab{
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  cursor:pointer;
+  color:var(--muted);
+  transition:0.2s;
 }
 
-button {
-    border: none;
-    padding: 10px 16px;
-    margin: 5px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
+.tab:hover{
+  background:var(--card);
+  color:var(--text);
 }
 
-.btn {
-    background: var(--accent);
-    color: white;
+.tab.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
 }
 
-.btn:hover {
-    transform: scale(1.05);
+/* MAIN */
+.main{
+  margin-left:220px;
+  padding:20px;
+  width:100%;
 }
 
-.container {
-    max-width: 600px;
-    margin: auto;
-    padding: 15px;
+/* TOP BAR */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
 }
 
-.card {
-    background: var(--card);
-    padding: 15px;
-    margin: 12px 0;
-    border-radius: 14px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-    transform: translateY(10px);
-    opacity: 0;
-    animation: pop 0.3s forwards;
+button{
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
 }
 
-@keyframes pop {
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
 }
 
-.toggle {
-    background: #22c55e;
-    color: white;
+/* CARDS */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:var(--card);
+  padding:15px;
+  border-radius:14px;
+  transition:0.2s;
+  border:1px solid rgba(255,255,255,0.05);
+}
+
+.card:hover{
+  transform:translateY(-3px);
+}
+
+.title{
+  font-weight:700;
+  margin-bottom:5px;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:13px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-<h1>📚 My Timetable</h1>
+<div class="sidebar">
+  <div class="logo">📚 School Dashboard</div>
 
-<div class="buttons">
-<button class="btn" onclick="showWeek('A')">Week A</button>
-<button class="btn" onclick="showWeek('B')">Week B</button>
-<button class="toggle" onclick="toggleTheme()">Light/Dark</button>
+  <div class="tab active" onclick="show('today')">Today</div>
+  <div class="tab" onclick="show('weekA')">Week A</div>
+  <div class="tab" onclick="show('weekB')">Week B</div>
+  <div class="tab" onclick="show('all')">Full Timetable</div>
+
+  <br>
+  <button class="btn" onclick="toggleTheme()">Toggle Theme</button>
 </div>
-</header>
 
-<div class="container" id="timetable"></div>
+<div class="main">
+  <div class="topbar">
+    <h2 id="title">Today</h2>
+  </div>
+
+  <div class="grid" id="content"></div>
+</div>
 
 <script>
+
 const weekA = [
-"Period 1 — Maths",
-"Period 2 — English",
-"Period 3 — Science",
-"Period 4 — History",
-"Period 5 — PE"
+{p:"Period 1", s:"Maths"},
+{p:"Period 2", s:"English"},
+{p:"Period 3", s:"Science"},
+{p:"Period 4", s:"History"},
+{p:"Period 5", s:"PE"}
 ];
 
 const weekB = [
-"Period 1 — Science",
-"Period 2 — Maths",
-"Period 3 — Geography",
-"Period 4 — English",
-"Period 5 — Art"
+{p:"Period 1", s:"Science"},
+{p:"Period 2", s:"Maths"},
+{p:"Period 3", s:"Geography"},
+{p:"Period 4", s:"English"},
+{p:"Period 5", s:"Art"}
 ];
 
-function showWeek(week) {
-    const container = document.getElementById("timetable");
-    container.innerHTML = "";
+function render(data){
+  const c = document.getElementById("content");
+  c.innerHTML = "";
 
-    let data = week === "A" ? weekA : weekB;
-
-    data.forEach((item, i) => {
-        let div = document.createElement("div");
-        div.className = "card";
-        div.style.animationDelay = (i * 0.05) + "s";
-        div.innerText = item;
-        container.appendChild(div);
-    });
+  data.forEach(x=>{
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML = `
+      <div class="title">${x.p}</div>
+      <div class="sub">${x.s}</div>
+    `;
+    c.appendChild(div);
+  });
 }
 
-function toggleTheme() {
-    document.body.classList.toggle("light");
+function show(page){
+
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+
+  if(page=="today"){
+    document.querySelectorAll(".tab")[0].classList.add("active");
+    document.getElementById("title").innerText="Today";
+    render(weekA);
+  }
+
+  if(page=="weekA"){
+    document.querySelectorAll(".tab")[1].classList.add("active");
+    document.getElementById("title").innerText="Week A";
+    render(weekA);
+  }
+
+  if(page=="weekB"){
+    document.querySelectorAll(".tab")[2].classList.add("active");
+    document.getElementById("title").innerText="Week B";
+    render(weekB);
+  }
+
+  if(page=="all"){
+    document.querySelectorAll(".tab")[3].classList.add("active");
+    document.getElementById("title").innerText="Full Timetable";
+    render([...weekA,...weekB]);
+  }
 }
 
-// default
-showWeek("A");
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+
+show("today");
+
 </script>
 
 </body>
