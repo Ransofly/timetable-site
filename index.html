@@ -2,224 +2,251 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>School Dashboard</title>
+<title>Flynn Timetable</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
 
 :root{
-  --bg:#0a0a0a;
-  --panel:#111;
-  --card:#161616;
+  --bg:#0f0f10;
+  --panel:#1b1b1d;
+  --card:#232326;
   --text:#ffffff;
-  --muted:#9ca3af;
-
-  --green:#22c55e;
-  --pink:#ec4899;
-  --blue:#3b82f6;
+  --muted:#a1a1aa;
+  --accent:#4f9cff;
+  --border:#2a2a2e;
 }
 
 body{
   margin:0;
-  font-family:Inter, sans-serif;
+  font-family:Segoe UI, sans-serif;
   background:var(--bg);
   color:var(--text);
+  display:flex;
+}
+
+/* LEFT SIDEBAR (WINDOWS STYLE) */
+.sidebar{
+  width:240px;
+  height:100vh;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:20px;
+  box-sizing:border-box;
+  position:fixed;
+}
+
+.logo{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:20px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.tab{
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  color:var(--muted);
+  transition:0.2s;
+}
+
+.tab:hover{
+  background:#2a2a2e;
+  color:white;
+}
+
+.tab.active{
+  background:var(--accent);
+  color:white;
+}
+
+/* MAIN AREA */
+.main{
+  margin-left:240px;
+  padding:20px;
+  width:100%;
 }
 
 /* TOP BAR */
-.top{
-  padding:20px;
-  background:linear-gradient(135deg,#111,#0a0a0a);
-  border-bottom:1px solid #222;
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
 }
 
 .time{
-  font-size:28px;
+  font-size:22px;
   font-weight:700;
 }
 
 .date{
   color:var(--muted);
+  font-size:13px;
 }
 
 /* GRID */
-.container{
-  padding:20px;
+.grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:15px;
 }
 
+/* CARDS (WINDOWS STYLE) */
 .card{
   background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
   padding:15px;
-  border-radius:15px;
-  border:1px solid #222;
 }
 
 .title{
-  color:var(--green);
-  font-weight:700;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:10px;
 }
 
 .big{
-  font-size:22px;
+  font-size:18px;
   font-weight:700;
 }
 
-/* TIMETABLE */
 .lesson{
   display:flex;
   justify-content:space-between;
-  padding:10px;
-  border-bottom:1px solid #222;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
 }
 
 .highlight{
-  background:rgba(236,72,153,0.15);
-  border-left:3px solid var(--pink);
-}
-
-/* BUTTON */
-button{
-  margin-top:10px;
-  padding:10px 12px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  background:var(--pink);
-  color:white;
-  font-weight:600;
-}
-
-/* PROGRESS BAR */
-.bar{
-  width:100%;
-  height:10px;
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-.fill{
-  height:100%;
-  background:linear-gradient(90deg,var(--green),var(--pink));
-  width:0%;
+  background:#2a2a2e;
+  border-left:3px solid var(--accent);
+  padding-left:8px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="top">
-  <div class="time" id="time">--:--</div>
-  <div class="date" id="date">Loading date...</div>
+<div class="sidebar">
+  <div class="logo">📚 Flynn Timetable</div>
+
+  <div class="nav">
+    <div class="tab active" onclick="show('today')">Today</div>
+    <div class="tab" onclick="show('weekA')">Week A</div>
+    <div class="tab" onclick="show('weekB')">Week B</div>
+    <div class="tab" onclick="show('full')">Full View</div>
+  </div>
 </div>
 
-<div class="container">
+<div class="main">
 
-  <div class="card">
-    <div class="title">Current Lesson</div>
-    <div class="big" id="current">Loading...</div>
-    <div id="countdown"></div>
+  <div class="topbar">
+    <div>
+      <div class="time" id="time">--:--</div>
+      <div class="date" id="date">---</div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="title">Next Lesson</div>
-    <div class="big" id="next">---</div>
-  </div>
+  <div class="grid">
 
-  <div class="card">
-    <div class="title">School Progress</div>
-    <div class="bar"><div class="fill" id="bar"></div></div>
-  </div>
+    <div class="card">
+      <div class="title">Current Class</div>
+      <div class="big" id="current">---</div>
+      <div id="left"></div>
+    </div>
 
-  <div class="card">
-    <div class="title">Timetable (Week A)</div>
-    <div id="timetable"></div>
+    <div class="card">
+      <div class="title">Next Class</div>
+      <div class="big" id="next">---</div>
+    </div>
+
+    <div class="card" style="grid-column:span 2;">
+      <div class="title">Today's Timetable</div>
+      <div id="list"></div>
+    </div>
+
   </div>
 
 </div>
 
 <script>
 
-const timetable = [
-{start:8*60+45, end:9*60+35, name:"Maths"},
-{start:9*60+40, end:10*60+30, name:"English"},
-{start:10*60+50, end:11*60+40, name:"Science"},
-{start:11*60+45, end:12*60+35, name:"History"},
-{start:13*60+15, end:14*60+5, name:"PE"}
+/* SIMPLE TIMING MODEL */
+const schedule = [
+{start:8*60+20,end:9*60+15,label:"P1"},
+{start:9*60+20,end:10*60+15,label:"P2"},
+{start:10*60+35,end:11*60+0,label:"P3"},
+{start:11*60,end:11*60+55,label:"P4"},
+{start:12*60+50,end:13*60+30,label:"P5"},
+{start:13*60+30,end:14*60+25,label:"P6"}
 ];
 
-function updateClock(){
-  const now = new Date();
+/* SUBJECTS (PLACEHOLDER — YOU CAN CHANGE LATER) */
+const subjects = {
+Mon:["History","Drama","Maths","Design","Science","English"],
+Tue:["Design","Design","Soccer","Soccer","English","RS"],
+Wed:["History","RS","Maths","Drama","French","French"],
+Thu:["Maths","Maths","English","History","Drama","PE"],
+Fri:["History","Design","Drama","Science","Music","French"]
+};
 
-  let h = now.getHours();
-  let m = now.getMinutes();
+function getDay(){
+  return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+}
 
-  document.getElementById("time").innerText =
-    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+function update(){
+  let now=new Date();
+  let mins=now.getHours()*60+now.getMinutes();
 
-  document.getElementById("date").innerText =
+  document.getElementById("time").innerText=
+    now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById("date").innerText=
     now.toDateString();
 
-  let mins = h*60 + m;
+  let current="Free";
+  let next="End";
+  let left="";
 
-  let current = "Free Period";
-  let next = "End of day";
-  let remaining = "";
-
-  for(let i=0;i<timetable.length;i++){
-    if(mins >= timetable[i].start && mins <= timetable[i].end){
-      current = timetable[i].name;
-      remaining = Math.floor(timetable[i].end - mins) + " min left";
-      if(timetable[i+1]) next = timetable[i+1].name;
-      break;
+  for(let i=0;i<schedule.length;i++){
+    if(mins>=schedule[i].start && mins<=schedule[i].end){
+      current=schedule[i].label;
+      left=(schedule[i].end-mins)+" min left";
+      if(schedule[i+1]) next=schedule[i+1].label;
     }
   }
 
-  document.getElementById("current").innerText = current;
-  document.getElementById("next").innerText = next;
-  document.getElementById("countdown").innerText = remaining;
-
-  // progress bar
-  let start = 8*60+45;
-  let end = 15*60;
-  let percent = ((mins-start)/(end-start))*100;
-  document.getElementById("bar").style.width = percent + "%";
+  document.getElementById("current").innerText=current;
+  document.getElementById("next").innerText=next;
+  document.getElementById("left").innerText=left;
 }
 
-function renderTimetable(){
-  let c = document.getElementById("timetable");
-  let now = new Date();
-  let mins = now.getHours()*60 + now.getMinutes();
+function render(){
+  let day=getDay();
+  let list=document.getElementById("list");
+  list.innerHTML="";
 
-  timetable.forEach(t=>{
-    let div = document.createElement("div");
-    div.className = "lesson";
+  if(!subjects[day]) return;
 
-    if(mins >= t.start && mins <= t.end){
-      div.classList.add("highlight");
-    }
-
-    div.innerHTML = `
-      <div>${t.name}</div>
-      <div>${format(t.start)} - ${format(t.end)}</div>
-    `;
-    c.appendChild(div);
+  subjects[day].forEach((s,i)=>{
+    let div=document.createElement("div");
+    div.className="lesson";
+    div.innerHTML=`<span>P${i+1} ${s}</span><span>Class</span>`;
+    list.appendChild(div);
   });
 }
 
-function format(m){
-  let h = Math.floor(m/60);
-  let mm = m%60;
-  return `${h.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')}`;
-}
-
-renderTimetable();
-updateClock();
-setInterval(updateClock,1000);
+render();
+update();
+setInterval(update,1000);
 
 </script>
 
