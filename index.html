@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Timetable</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #0f172a;
+    color: white;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background: #1e293b;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.btn {
+    background: #38bdf8;
+    color: black;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: #1e293b;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>My School Timetable</h1>
+<button class="btn" onclick="showWeek('A')">Week A</button>
+<button class="btn" onclick="showWeek('B')">Week B</button>
+</header>
+
+<div class="container" id="timetable"></div>
+
+<script>
+const weekA = [
+"Period 1 — Maths",
+"Period 2 — English",
+"Period 3 — Science",
+"Period 4 — History",
+"Period 5 — PE"
+];
+
+const weekB = [
+"Period 1 — Science",
+"Period 2 — Maths",
+"Period 3 — Geography",
+"Period 4 — English",
+"Period 5 — Art"
+];
+
+function showWeek(week) {
+    const container = document.getElementById("timetable");
+    container.innerHTML = "";
+
+    let data = week === "A" ? weekA : weekB;
+
+    data.forEach(item => {
+        let div = document.createElement("div");
+        div.className = "card";
+        div.innerText = item;
+        container.appendChild(div);
+    });
+}
+
+// default load
+showWeek("A");
+</script>
+
+</body>
+</html>
