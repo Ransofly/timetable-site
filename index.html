@@ -9,23 +9,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root{
-  --bg:#0b1220;
-  --panel:#0f1a2f;
-  --card:#16233f;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --accent:#7c3aed;
-  --accent2:#06b6d4;
-}
+  --bg:#0a0a0a;
+  --panel:#111;
+  --card:#161616;
+  --text:#ffffff;
+  --muted:#9ca3af;
 
-.light{
-  --bg:#f5f7ff;
-  --panel:#ffffff;
-  --card:#eef2ff;
-  --text:#0f172a;
-  --muted:#475569;
-  --accent:#4f46e5;
-  --accent2:#06b6d4;
+  --green:#22c55e;
+  --pink:#ec4899;
+  --blue:#3b82f6;
 }
 
 body{
@@ -33,192 +25,201 @@ body{
   font-family:Inter, sans-serif;
   background:var(--bg);
   color:var(--text);
-  display:flex;
-}
-
-/* SIDEBAR */
-.sidebar{
-  width:220px;
-  background:var(--panel);
-  height:100vh;
-  padding:20px;
-  box-sizing:border-box;
-  position:fixed;
-}
-
-.logo{
-  font-size:18px;
-  font-weight:700;
-  margin-bottom:20px;
-}
-
-.tab{
-  padding:12px;
-  margin:8px 0;
-  border-radius:10px;
-  cursor:pointer;
-  color:var(--muted);
-  transition:0.2s;
-}
-
-.tab:hover{
-  background:var(--card);
-  color:var(--text);
-}
-
-.tab.active{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:white;
-}
-
-/* MAIN */
-.main{
-  margin-left:220px;
-  padding:20px;
-  width:100%;
 }
 
 /* TOP BAR */
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
+.top{
+  padding:20px;
+  background:linear-gradient(135deg,#111,#0a0a0a);
+  border-bottom:1px solid #222;
 }
 
-button{
-  border:none;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
+.time{
+  font-size:28px;
+  font-weight:700;
 }
 
-.btn{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:white;
+.date{
+  color:var(--muted);
 }
 
-/* CARDS */
-.grid{
+/* GRID */
+.container{
+  padding:20px;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns:1fr 1fr;
   gap:15px;
 }
 
 .card{
   background:var(--card);
   padding:15px;
-  border-radius:14px;
-  transition:0.2s;
-  border:1px solid rgba(255,255,255,0.05);
-}
-
-.card:hover{
-  transform:translateY(-3px);
+  border-radius:15px;
+  border:1px solid #222;
 }
 
 .title{
+  color:var(--green);
   font-weight:700;
-  margin-bottom:5px;
 }
 
-.sub{
-  color:var(--muted);
-  font-size:13px;
+.big{
+  font-size:22px;
+  font-weight:700;
+}
+
+/* TIMETABLE */
+.lesson{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  border-bottom:1px solid #222;
+}
+
+.highlight{
+  background:rgba(236,72,153,0.15);
+  border-left:3px solid var(--pink);
+}
+
+/* BUTTON */
+button{
+  margin-top:10px;
+  padding:10px 12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:var(--pink);
+  color:white;
+  font-weight:600;
+}
+
+/* PROGRESS BAR */
+.bar{
+  width:100%;
+  height:10px;
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--green),var(--pink));
+  width:0%;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <div class="logo">📚 School Dashboard</div>
-
-  <div class="tab active" onclick="show('today')">Today</div>
-  <div class="tab" onclick="show('weekA')">Week A</div>
-  <div class="tab" onclick="show('weekB')">Week B</div>
-  <div class="tab" onclick="show('all')">Full Timetable</div>
-
-  <br>
-  <button class="btn" onclick="toggleTheme()">Toggle Theme</button>
+<div class="top">
+  <div class="time" id="time">--:--</div>
+  <div class="date" id="date">Loading date...</div>
 </div>
 
-<div class="main">
-  <div class="topbar">
-    <h2 id="title">Today</h2>
+<div class="container">
+
+  <div class="card">
+    <div class="title">Current Lesson</div>
+    <div class="big" id="current">Loading...</div>
+    <div id="countdown"></div>
   </div>
 
-  <div class="grid" id="content"></div>
+  <div class="card">
+    <div class="title">Next Lesson</div>
+    <div class="big" id="next">---</div>
+  </div>
+
+  <div class="card">
+    <div class="title">School Progress</div>
+    <div class="bar"><div class="fill" id="bar"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="title">Timetable (Week A)</div>
+    <div id="timetable"></div>
+  </div>
+
 </div>
 
 <script>
 
-const weekA = [
-{p:"Period 1", s:"Maths"},
-{p:"Period 2", s:"English"},
-{p:"Period 3", s:"Science"},
-{p:"Period 4", s:"History"},
-{p:"Period 5", s:"PE"}
+const timetable = [
+{start:8*60+45, end:9*60+35, name:"Maths"},
+{start:9*60+40, end:10*60+30, name:"English"},
+{start:10*60+50, end:11*60+40, name:"Science"},
+{start:11*60+45, end:12*60+35, name:"History"},
+{start:13*60+15, end:14*60+5, name:"PE"}
 ];
 
-const weekB = [
-{p:"Period 1", s:"Science"},
-{p:"Period 2", s:"Maths"},
-{p:"Period 3", s:"Geography"},
-{p:"Period 4", s:"English"},
-{p:"Period 5", s:"Art"}
-];
+function updateClock(){
+  const now = new Date();
 
-function render(data){
-  const c = document.getElementById("content");
-  c.innerHTML = "";
+  let h = now.getHours();
+  let m = now.getMinutes();
 
-  data.forEach(x=>{
-    const div = document.createElement("div");
-    div.className="card";
+  document.getElementById("time").innerText =
+    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
+  document.getElementById("date").innerText =
+    now.toDateString();
+
+  let mins = h*60 + m;
+
+  let current = "Free Period";
+  let next = "End of day";
+  let remaining = "";
+
+  for(let i=0;i<timetable.length;i++){
+    if(mins >= timetable[i].start && mins <= timetable[i].end){
+      current = timetable[i].name;
+      remaining = Math.floor(timetable[i].end - mins) + " min left";
+      if(timetable[i+1]) next = timetable[i+1].name;
+      break;
+    }
+  }
+
+  document.getElementById("current").innerText = current;
+  document.getElementById("next").innerText = next;
+  document.getElementById("countdown").innerText = remaining;
+
+  // progress bar
+  let start = 8*60+45;
+  let end = 15*60;
+  let percent = ((mins-start)/(end-start))*100;
+  document.getElementById("bar").style.width = percent + "%";
+}
+
+function renderTimetable(){
+  let c = document.getElementById("timetable");
+  let now = new Date();
+  let mins = now.getHours()*60 + now.getMinutes();
+
+  timetable.forEach(t=>{
+    let div = document.createElement("div");
+    div.className = "lesson";
+
+    if(mins >= t.start && mins <= t.end){
+      div.classList.add("highlight");
+    }
+
     div.innerHTML = `
-      <div class="title">${x.p}</div>
-      <div class="sub">${x.s}</div>
+      <div>${t.name}</div>
+      <div>${format(t.start)} - ${format(t.end)}</div>
     `;
     c.appendChild(div);
   });
 }
 
-function show(page){
-
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-
-  if(page=="today"){
-    document.querySelectorAll(".tab")[0].classList.add("active");
-    document.getElementById("title").innerText="Today";
-    render(weekA);
-  }
-
-  if(page=="weekA"){
-    document.querySelectorAll(".tab")[1].classList.add("active");
-    document.getElementById("title").innerText="Week A";
-    render(weekA);
-  }
-
-  if(page=="weekB"){
-    document.querySelectorAll(".tab")[2].classList.add("active");
-    document.getElementById("title").innerText="Week B";
-    render(weekB);
-  }
-
-  if(page=="all"){
-    document.querySelectorAll(".tab")[3].classList.add("active");
-    document.getElementById("title").innerText="Full Timetable";
-    render([...weekA,...weekB]);
-  }
+function format(m){
+  let h = Math.floor(m/60);
+  let mm = m%60;
+  return `${h.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')}`;
 }
 
-function toggleTheme(){
-  document.body.classList.toggle("light");
-}
-
-show("today");
+renderTimetable();
+updateClock();
+setInterval(updateClock,1000);
 
 </script>
 
