@@ -249,6 +249,203 @@ update();
 setInterval(update,1000);
 
 </script>
+<script>
 
+/* =========================
+   SETTINGS (DO NOT TOUCH)
+========================= */
+
+const TRANSITION_MINUTES = 5;
+
+/* =========================
+   WEEK SYSTEM (AUTO 7 DAYS)
+========================= */
+
+function getWeek(){
+  const start = new Date("2025-01-01");
+  const now = new Date();
+  const diff = Math.floor((now - start) / (1000*60*60*24));
+  return diff % 2 === 0 ? "A" : "B";
+}
+
+/* =========================
+   DAY SYSTEM
+========================= */
+
+function getDay(){
+  const d = new Date().getDay();
+  return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d];
+}
+
+/* =========================
+   LOAD CURRENT TIMETABLE
+   (YOU SAID DO NOT CHANGE DATA)
+========================= */
+
+const subjects = {
+Mon:["History","Drama","Maths","Design","Science","English"],
+Tue:["Design","Design","Soccer","Soccer","English","RS"],
+Wed:["History","RS","Maths","Drama","French","French"],
+Thu:["Maths","Maths","English","History","Drama","PE"],
+Fri:["History","Design","Drama","Science","Music","French"]
+};
+
+/* =========================
+   TIME BLOCK ENGINE
+   (REAL MINUTE ACCURATE)
+========================= */
+
+const schedule = [
+{start:8*60+20,end:9*60+15,label:"P1"},
+{start:9*60+20,end:10*60+15,label:"P2"},
+{start:10*60+15,end:10*60+35,label:"Recess"},
+{start:10*60+35,end:11*60+0,label:"Mentor/Assembly"},
+{start:11*60+0,end:11*60+55,label:"P3"},
+{start:11*60+55,end:12*60+50,label:"P4"},
+{start:12*60+50,end:13*60+30,label:"Lunch"},
+{start:13*60+30,end:14*60+25,label:"P5"},
+{start:14*60+25,end:15*60+20,label:"P6"}
+];
+
+/* =========================
+   CORE TIMER ENGINE
+========================= */
+
+function getCurrent(mins){
+
+  for(let i=0;i<schedule.length;i++){
+    let s=schedule[i];
+
+    if(mins>=s.start && mins<s.end){
+      return {type:"current", block:s, index:i};
+    }
+
+    if(mins>=s.end && mins<schedule[i+1]?.start){
+      return {
+        type:"transition",
+        next:schedule[i+1]
+      };
+    }
+  }
+
+  return {type:"free"};
+}
+
+/* =========================
+   UPDATE CLOCK
+========================= */
+
+function update(){
+
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  const seconds = now.getSeconds();
+
+  document.getElementById("time").innerText =
+    now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  document.getElementById("date").innerText =
+    now.toDateString();
+
+  const state = getCurrent(mins);
+
+  let current="Free Period";
+  let next="End of Day";
+  let left="";
+
+  if(state.type==="current"){
+    current = state.block.label;
+
+    const remainingSec =
+      (state.block.end*60) - (mins*60 + seconds);
+
+    left = Math.max(0, Math.floor(remainingSec/60)) + " min left";
+  }
+
+  if(state.type==="transition"){
+    current = "Travel Time";
+    next = state.next.label;
+
+    const remaining =
+      state.next.start - mins;
+
+    left = Math.max(0, remaining) + " min until next";
+  }
+
+  if(state.type==="free"){
+    current="Free";
+  }
+
+  /* next class detection */
+  for(let i=0;i<schedule.length;i++){
+    if(mins < schedule[i].start){
+      next = schedule[i].label;
+      break;
+    }
+  }
+
+  document.getElementById("current").innerText=current;
+  document.getElementById("next").innerText=next;
+  document.getElementById("left").innerText=left;
+
+  document.getElementById("info").innerText =
+    `Week ${getWeek()} • ${getDay()} • Live`;
+
+}
+
+/* =========================
+   RENDER TIMETABLE
+========================= */
+
+function render(){
+
+  const list=document.getElementById("list");
+  list.innerHTML="";
+
+  const day=getDay();
+
+  subjects[day].forEach((s,i)=>{
+
+    let div=document.createElement("div");
+    div.className="lesson";
+
+    div.innerHTML=`
+      <span>P${i+1} ${s}</span>
+      <span>${schedule[i]?.label || ""}</span>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+/* =========================
+   LIGHT/DARK MODE FIX
+========================= */
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
+}
+
+/* restore theme */
+(function(){
+  if(localStorage.getItem("theme")==="light"){
+    document.body.classList.add("light");
+  }
+})();
+
+/* =========================
+   INIT
+========================= */
+
+render();
+update();
+setInterval(update,1000);
+
+</script>
 </body>
 </html>
