@@ -6,66 +6,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{
+  --bg:#0e0f12;
+  --panel:#15171c;
+  --card:#1c1f26;
+  --text:#ffffff;
+  --muted:#9aa0a6;
+  --accent:#4f9cff;
+  --good:#22c55e;
+  --border:#2a2d35;
+}
+
+body.light{
+  --bg:#f4f6f8;
+  --panel:#ffffff;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --good:#16a34a;
+  --border:#e5e7eb;
+}
+
 body{
   margin:0;
   font-family:Segoe UI, sans-serif;
-  background:#0e0f12;
-  color:white;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* HEADER */
 .header{
-  padding:15px;
-  background:#151820;
-  border-bottom:1px solid #222;
+  padding:14px 18px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .title{
+  font-weight:700;
+}
+
+.small{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:12px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+}
+
+.big{
   font-size:18px;
   font-weight:700;
 }
 
-.sub{
-  color:#aaa;
-  font-size:13px;
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:10px;
-  padding:15px;
-}
-
-/* CARD */
-.card{
-  background:#161922;
-  padding:12px;
+.bar{
+  height:6px;
+  background:#2a2d35;
   border-radius:10px;
-  border:1px solid #222;
+  overflow:hidden;
+  margin-top:8px;
 }
 
-.current{
-  border-left:4px solid #00ff88;
-  background:#1a2a1f;
+.fill{
+  height:100%;
+  background:var(--good);
+  width:0%;
+  transition:width 0.3s linear;
 }
 
-/* TIMETABLE TABLE */
 table{
   width:100%;
   border-collapse:collapse;
 }
 
-td,th{
+td{
   padding:8px;
-  border-bottom:1px solid #222;
+  border-bottom:1px solid var(--border);
   font-size:13px;
 }
 
-.highlight{
-  background:#1a2a1f;
-  border-left:4px solid #00ff88;
+.active{
+  background:rgba(34,197,94,0.08);
+  border-left:3px solid var(--good);
+}
+
+button{
+  background:var(--accent);
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -73,20 +117,33 @@ td,th{
 <body>
 
 <div class="header">
-  <div class="title">📚 Flynn Timetable</div>
-  <div class="sub" id="info">Loading...</div>
+  <div>
+    <div class="title">📚 Flynn Timetable</div>
+    <div class="small" id="meta"></div>
+  </div>
+
+  <div>
+    <button onclick="toggleTheme()">Theme</button>
+    <button onclick="toggleClock()">12/24h</button>
+  </div>
 </div>
 
-<div class="grid">
+<div class="wrap">
 
-  <div class="card current">
-    <div><b>Current Class:</b> <span id="current">---</span></div>
-    <div><b>Next:</b> <span id="next">---</span></div>
-    <div id="countdown"></div>
+  <div class="card">
+    <div class="small">Current</div>
+    <div class="big" id="current">---</div>
+    <div class="small" id="countdown"></div>
+    <div class="bar"><div class="fill" id="progress"></div></div>
   </div>
 
   <div class="card">
-    <b>Today's Timetable</b>
+    <div class="small">Next</div>
+    <div class="big" id="next">---</div>
+  </div>
+
+  <div class="card" style="grid-column:span 2;">
+    <div class="small">Today</div>
     <table id="table"></table>
   </div>
 
@@ -94,18 +151,15 @@ td,th{
 
 <script>
 
-/* ================= TIMETABLE DATA ================= */
+/* ================= SETTINGS ================= */
 
-const schedule = [
-{start:8*60+20,end:9*60+15,label:"P1"},
-{start:9*60+20,end:10*60+15,label:"P2"},
-{start:10*60+35,end:11*60+0,label:"P3"},
-{start:11*60+0,end:11*60+55,label:"P4"},
-{start:12*60+50,end:13*60+30,label:"P5"},
-{start:13*60+30,end:14*60+25,label:"P6"}
-];
+let use24h = localStorage.getItem("clock") === "24";
+if(localStorage.getItem("theme")==="light") document.body.classList.add("light");
 
-/* YOUR REAL DATA */
+/* ================= TIMETABLE DATA (UNCHANGED) ================= */
+
+const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
 const data = {
 Mon:["History","Drama","Maths","Design","Science","English"],
 Tue:["Design","Design","Soccer","Soccer","English","RS"],
@@ -114,87 +168,169 @@ Thu:["Maths","Maths","English","History","Drama","PE"],
 Fri:["History","Design","Drama","Science","Music","French"]
 };
 
-/* ================= AUTO WEEK ================= */
+/* ================= NORMAL + WED TIMES ================= */
+
+const normal = [
+{start:500,end:555},
+{start:560,end:615},
+{start:615,end:635}, // recess
+{start:635,end:660}, // mentor
+{start:660,end:715},
+{start:715,end:770},
+{start:770,end:810}, // lunch
+{start:810,end:865},
+{start:865,end:920}
+];
+
+const wed = [
+{start:500,end:555},
+{start:555,end:605},
+{start:605,end:625},
+{start:625,end:675},
+{start:675,end:725},
+{start:725,end:785},
+{start:785,end:830},
+{start:830,end:880},
+{start:880,end:920}
+];
+
+/* ================= WEEK AUTO ================= */
 
 function getWeek(){
-  const start = new Date("2025-01-01");
-  const now = new Date();
-  const diff = Math.floor((now-start)/(1000*60*60*24));
-  return diff % 2 === 0 ? "A":"B";
+  const start=new Date("2025-01-01");
+  const diff=Math.floor((new Date()-start)/86400000);
+  return diff%2===0?"A":"B";
 }
 
 /* ================= DAY ================= */
 
 function getDay(){
-  return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+  return days[new Date().getDay()];
 }
 
-/* ================= CORE ENGINE ================= */
+/* ================= ENGINE ================= */
 
-function update(){
+function nowMins(){
+  let d=new Date();
+  return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+}
 
-  const now = new Date();
-  const mins = now.getHours()*60 + now.getMinutes();
-  const sec = now.getSeconds();
+function format(mins){
+  let h=Math.floor(mins/60);
+  let m=Math.floor(mins%60);
+  if(!use24h){
+    let am=h>=12?"PM":"AM";
+    h=h%12||12;
+    return `${h}:${m.toString().padStart(2,"0")} ${am}`;
+  }
+  return `${h}:${m.toString().padStart(2,"0")}`;
+}
 
-  const day = getDay();
+/* ================= CORE LOGIC ================= */
 
-  let current="Free";
-  let next="End";
-  let left="";
+function getState(){
+
+  const m=nowMins();
+  const schedule = getDay()==="Wed"?wed:normal;
 
   for(let i=0;i<schedule.length;i++){
-    if(mins>=schedule[i].start && mins<=schedule[i].end){
-      current = schedule[i].label;
 
-      let remaining = (schedule[i].end*60) - (mins*60+sec);
-      left = Math.floor(remaining/60)+" min left";
+    if(m>=schedule[i].start && m<schedule[i].end){
 
-      if(schedule[i+1]) next = schedule[i+1].label;
+      let progress=(m-schedule[i].start)/(schedule[i].end-schedule[i].start)*100;
+
+      return {
+        type:"current",
+        index:i,
+        progress,
+        remaining:schedule[i].end-m
+      };
+    }
+
+    if(m<schedule[i].start){
+      return {
+        type:"next",
+        index:i
+      };
     }
   }
 
-  document.getElementById("current").innerText=current;
-  document.getElementById("next").innerText=next;
-  document.getElementById("countdown").innerText=left;
+  return {type:"end"};
+}
 
-  document.getElementById("info").innerText=
-    `Week ${getWeek()} • ${day} • ${now.toDateString()}`;
+/* ================= UI ================= */
+
+function update(){
+
+  const d=new Date();
+
+  document.getElementById("meta").innerText=
+    `Week ${getWeek()} • ${getDay()} • ${d.toLocaleDateString()}`;
+
+  const state=getState();
+
+  const schedule=getDay()==="Wed"?wed:normal;
+
+  if(state.type==="current"){
+    document.getElementById("current").innerText=
+      data[getDay()][state.index] || "Event";
+
+    document.getElementById("countdown").innerText=
+      Math.floor(state.remaining)+" min left";
+
+    document.getElementById("progress").style.width=
+      state.progress+"%";
+
+    if(schedule[state.index+1]){
+      document.getElementById("next").innerText=
+        data[getDay()][state.index+1] || "Next Event";
+    }
+  }
+
+  if(state.type==="next"){
+    document.getElementById("current").innerText="Break / Transition";
+    document.getElementById("next").innerText=
+      data[getDay()][state.index] || "Next";
+  }
+
+  if(state.type==="end"){
+    document.getElementById("current").innerText="School Finished";
+    document.getElementById("next").innerText="—";
+    document.getElementById("progress").style.width="0%";
+  }
+
 }
 
 /* ================= TABLE ================= */
 
 function render(){
 
-  const table=document.getElementById("table");
-  table.innerHTML="";
+  const t=document.getElementById("table");
+  t.innerHTML="";
 
-  const day=getDay();
-  const subjects=data[day];
+  const d=getDay();
+  if(!data[d]) return;
 
-  if(!subjects) return;
-
-  subjects.forEach((sub,i)=>{
-
+  data[d].forEach((x,i)=>{
     let row=document.createElement("tr");
-
-    row.innerHTML=`
-      <td>P${i+1}</td>
-      <td>${sub}</td>
-      <td>${schedule[i]?.start?format(schedule[i].start):""}</td>
-    `;
-
-    table.appendChild(row);
+    row.innerHTML=`<td>P${i+1}</td><td>${x}</td>`;
+    t.appendChild(row);
   });
 }
 
-function format(m){
-  let h=Math.floor(m/60);
-  let mm=m%60;
-  return `${h}:${mm.toString().padStart(2,"0")}`;
+/* ================= SETTINGS ================= */
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
 }
 
-/* ================= INIT ================= */
+function toggleClock(){
+  use24h=!use24h;
+  localStorage.setItem("clock",use24h?"24":"12");
+}
+
+/* ================= START ================= */
 
 render();
 update();
